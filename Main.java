@@ -10,17 +10,17 @@ interface accessBlockchain {
 
 class NegativeGasNotAllowed extends Exception {
     public NegativeGasNotAllowed() {
-        System.out.println();
+        System.out.println("\nYou cannot process negatively signed Gas Amount in the transaction.");
     }
 }
 class NotEnoughGasAvailable extends Exception {
     public NotEnoughGasAvailable() {
-        System.out.println();
+        System.out.println("\nYou don't have enough Gas to process the transaction.");
     }
 }
 class SelfLoopedTransaction extends Exception {
     public SelfLoopedTransaction() {
-        System.out.println();
+        System.out.println("\nYou cannot process a Transaction to your own ID, that will led to demolishing the transaction fees.");
     }
 }
 
@@ -120,15 +120,15 @@ public class Main extends Exception {
                 throw new NotEnoughGasAvailable();
             }
         }
-        
+
         catch(SelfLoopedTransaction ex) {
-            System.out.println("You cannot process a Transaction to your own ID, that will led to demolishing the transaction fees.");
+            
         }
         catch(NotEnoughGasAvailable ex) {
-            System.out.println("You don't have enough Gas to process the transaction.");
+            System.out.println("You need " + (amount-Integer.parseInt(blockchain.get(0).accessData)) + " Gas more to process out Transaction.");
         }
         catch(NegativeGasNotAllowed ex) {
-            System.out.println("You cannot process negatively signed Gas Amount in the transaction.");
+            System.out.println(amount + " cannot be processed.");
         }
     }
 
@@ -159,7 +159,7 @@ public class Main extends Exception {
             }
         }
 
-        System.out.println("Decentralized Blockchain Validation successfully completed !!");
+        System.out.println("Decentralized Blockchain Validation successfully completed !!\n");
         return true; 
     }
 
@@ -185,7 +185,7 @@ public class Main extends Exception {
         }
         System.out.println("Blockchain is produced...");
         
-        //Decentralized_Blockchain_Validation();
+        Decentralized_Blockchain_Validation();
         
         Transaction();
     } 

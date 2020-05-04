@@ -3,22 +3,30 @@ import java.io.*;
 import java.security.*; 
 
 interface accessBlockchain {
-    String hashValue = ""; 
-    String previousHashValue = "";
+    String accessData = "";
+    String accessHashValue = ""; 
+    String accessPreviousHashValue = "";
     String accessHashValue();
+    double TransactionFee = 0;
 }
 
 class NegativeGasNotAllowed extends Exception {
+    private static final long serialVersionUID = 1L;
+
     public NegativeGasNotAllowed() {
         System.out.println("\nYou cannot process negatively signed Gas Amount in the transaction.");
     }
 }
 class NotEnoughGasAvailable extends Exception {
+    private static final long serialVersionUID = 1L;
+
     public NotEnoughGasAvailable() {
         System.out.println("\nYou don't have enough Gas to process the transaction.");
     }
 }
 class SelfLoopedTransaction extends Exception {
+    private static final long serialVersionUID = 1L;
+
     public SelfLoopedTransaction() {
         System.out.println("\nYou cannot process a Transaction to your own ID, that will led to demolishing the transaction fees.");
     }
@@ -27,18 +35,24 @@ class SelfLoopedTransaction extends Exception {
 
 
 class Block implements accessBlockchain { 
-    protected String hashValue; 
-    protected String previousHashValue; 
+    private String hashValue; 
+    public String accessHashValue = ""; 
+    private String previousHashValue; 
+    public String accessPreviousHashValue = "";
     protected String data; 
     public String accessData;
     private long timeFootPrint; 
+    double TransactionFee;
     
     protected Block(String data, String previousHashValue) { 
         this.data = data; 
         this.accessData = this.data;
-        this.previousHashValue = previousHashValue; 
+        this.previousHashValue = previousHashValue;  
+        this.accessPreviousHashValue = this.previousHashValue;
         this.timeFootPrint = new Date().getTime(); 
         this.hashValue = generateHashValue();
+        this.accessHashValue = this.hashValue;
+        this.TransactionFee = 0.01*Integer.parseInt(this.data);
         //System.out.println("Data: " + this.data);
         System.out.println("Generated Hash-Value is: " + this.hashValue);
     } 
@@ -50,9 +64,11 @@ class Block implements accessBlockchain {
     } 
     
     public String accessHashValue() { 
-        String Value = "";
-        Value = this.hashValue; 
-        return Value; 
+        return this.accessHashValue;
+    } 
+
+    public String accessPreviousHashValue() { 
+        return this.accessPreviousHashValue;
     } 
 } 
 
@@ -83,38 +99,42 @@ class EncryptionOfHash {
 } 
 
 public class Main extends Exception { 
-
-    private static ArrayList<Block> blockchain = new ArrayList<Block>(); 
+    private static final long serialVersionUID = 1L;
+    private static ArrayList<Block> blockchain = new ArrayList<Block>();
     static Scanner scanner = new Scanner(System.in);
     
-    private static void Transaction() {
+    private static Boolean Transaction() {
         System.out.println("\nYou have a total amount of " + blockchain.get(0).accessData + " Gas left.");
-        System.out.println("Your ID is: " + blockchain.get(0).hashValue);
+        System.out.println("Your ID is: " + blockchain.get(0).accessHashValue);
         
         System.out.print("\nClient ID : ");
         String ClientID = scanner.next();
         System.out.print("Amount to be transfered: ");
         int amount = scanner.nextInt();
+        double TransactionFee = 0.01*Double.parseDouble(String.valueOf(amount));
         try {
             if(amount<=Integer.parseInt(blockchain.get(0).accessData)) {
                 if(amount<0) {
                     throw new NegativeGasNotAllowed();
                 }
-                if(ClientID==blockchain.get(0).hashValue) {
+                if(ClientID==blockchain.get(0).accessHashValue) {
                     throw new SelfLoopedTransaction();
                 }
                 for(int j=0;j<blockchain.size();j++) {
-                    if (blockchain.get(j).hashValue.equals(ClientID)) {
-                        blockchain.get(0).data = String.valueOf(Integer.parseInt(blockchain.get(0).accessData) - amount);
+                    if (blockchain.get(j).accessHashValue.equals(ClientID)) {
+                        blockchain.get(0).data = String.valueOf(Integer.parseInt(blockchain.get(0).accessData) - amount - TransactionFee);
                         blockchain.get(0).accessData = blockchain.get(0).data;
                         blockchain.get(j).data = String.valueOf(Integer.parseInt(blockchain.get(j).accessData) + amount);
                         blockchain.get(j).accessData = blockchain.get(j).data;
                         
-                        System.out.println("\n" + blockchain.get(j).data + " Gas sent to account, having Client ID: " + blockchain.get(j).hashValue);
+                        System.out.println("\n" + blockchain.get(j).data + " Gas sent to account, having Client ID: " + blockchain.get(j).accessHashValue);
                         System.out.println("You are left with " + blockchain.get(0).data + " Gas");
-                        break;
+                        return true;
                     }
                 }
+                blockchain.get(0).data = String.valueOf(Integer.parseInt(blockchain.get(0).accessData) - TransactionFee);
+                blockchain.get(0).accessData = blockchain.get(0).data;
+                return true;
             }
             else {
                 throw new NotEnoughGasAvailable();
@@ -130,6 +150,7 @@ public class Main extends Exception {
         catch(NegativeGasNotAllowed ex) {
             System.out.println(amount + " cannot be processed.");
         }
+        return false;
     }
 
     private static Boolean Decentralized_Blockchain_Validation() 
@@ -142,20 +163,20 @@ public class Main extends Exception {
             currentBlock = blockchain.get(i); 
             previousBlock = blockchain.get(i-1); 
 
-            if (!currentBlock.hashValue.equals(currentBlock.accessHashValue())) { 
-                System.out.println("Hashes are not equal"); 
+            if (!currentBlock.accessHashValue.equals(currentBlock.accessHashValue())) { 
+                System.out.println("Hash value of Block no." + i + " has not matched with Blockchain"); 
                 return false; 
             } 
             else {
-                System.out.println("Hash Value is validated"); 
+                System.out.println("Hash Value of Block no." + i + " is validated"); 
             }
 
-            if (!previousBlock.hashValue.equals(currentBlock.previousHashValue)) { 
-                System.out.println("Previous Hashes are not equal"); 
+            if (!previousBlock.accessHashValue.equals(currentBlock.accessPreviousHashValue)) { 
+                System.out.println("Hash value of Block no." + i + " with Previous Block no." + (i-1) + " has not matched in the Blockchain"); 
                 return false; 
             } 
             else {
-                System.out.println("Previous Hash Value is validated"); 
+                System.out.println("Hash Value of Block no." + i + " with Previous Block no." + (i-1) + " is validated"); 
             }
         }
 
@@ -165,25 +186,25 @@ public class Main extends Exception {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        int incr = 1;
-        int data;
+        int counter = 1;
+        int NoOfBlock;
         System.out.println("Enter the no. of blocks to be produced:");
-        data = scanner.nextInt();
+        NoOfBlock = scanner.nextInt();
         
         System.out.println("Blockchain is being produced at the rate of 1 block per 1.5 seconds:");
         try {
             blockchain.add(new Block("10000", "0"));
             Thread.sleep(1500);
-            while(incr != data) {
-                blockchain.add(new Block("0", blockchain.get(blockchain.size() - 1).hashValue));
+            while(counter != NoOfBlock) {
+                blockchain.add(new Block("0", blockchain.get(blockchain.size() - 1).accessHashValue));
                 Thread.sleep(1500);
-                incr++;
+                counter++;
             }
         }
         catch (InterruptedException ex) {
             System.out.println("Blockchain abruptly broken.");
         }
-        System.out.println("Blockchain is produced...");
+        System.out.println("Blockchain is produced...\n");
         
         Decentralized_Blockchain_Validation();
         

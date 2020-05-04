@@ -1,1 +1,1 @@
-# Blockchain-based-Secured_Transaction-on-Java
+# Blockchain based Secured-Transaction on Java

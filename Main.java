@@ -80,16 +80,6 @@ class Blockchain {
     private static ArrayList<Block> blockchain = new ArrayList<Block>();
     private static Scanner scanner = new Scanner(System.in);
 
-    
-    protected void accessTransaction() {
-        IntegrationsHouse accessIntegrations = new IntegrationsHouse();
-        accessIntegrations.Transaction();
-    }
-    protected void accessDecentralized_Blockchain_Validation() {
-        IntegrationsHouse accessIntegrations = new IntegrationsHouse();
-        accessIntegrations.Decentralized_Blockchain_Validation();
-    }
-
     class ProductionGradle {
 
         protected void accessGenesisChamber() {
@@ -149,6 +139,15 @@ class Blockchain {
     }
     
     class IntegrationsHouse {
+        protected void accessTransaction() {
+            IntegrationsHouse accessIntegrations = new IntegrationsHouse();
+            accessIntegrations.Transaction();
+        }
+        protected void accessDecentralized_Blockchain_Validation() {
+            IntegrationsHouse accessIntegrations = new IntegrationsHouse();
+            accessIntegrations.Decentralized_Blockchain_Validation();
+        }
+
         private Boolean Transaction() {
             System.out.println("\nYou have a total amount of " + blockchain.get(0).accessData + " Gas left.");
             System.out.println("Your ID is: " + blockchain.get(0).accessHashValue);
@@ -251,8 +250,9 @@ public class Main extends Exception {
         Blockchain.ProductionGradle GenesisGradle = newBlockchainProduction.new ProductionGradle();
         GenesisGradle.accessGenesisChamber();
 
-        //newBlockchainProduction.accessDecentralized_Blockchain_Validation();
+        Blockchain.IntegrationsHouse IntegrationGradle = newBlockchainProduction.new IntegrationsHouse();
+        //IntegrationGradle.accessDecentralized_Blockchain_Validation();
 
-        newBlockchainProduction.accessTransaction();
+        IntegrationGradle.accessTransaction();
     } 
 } 

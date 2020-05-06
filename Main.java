@@ -1,5 +1,5 @@
 import java.util.*;
-import sun.security.krb5.EncryptionKey;
+//import sun.security.krb5.EncryptionKey;
 import java.io.*;
 import java.security.*; 
 
@@ -148,6 +148,44 @@ class Blockchain {
             accessIntegrations.Decentralized_Blockchain_Validation();
         }
 
+        class MerkleTrees {
+            private List<String> TransactionsHistory;
+
+            private MerkleTrees(List<String> TransactionsHistory) {
+                this.TransactionsHistory = TransactionsHistory;
+            }
+            
+            private List<String> GetMerkleRoot() {
+                return construct(this.TransactionsHistory);
+            }
+
+            private List<String> construct(List<String> TransactionsHistory) {
+                if(TransactionsHistory.size()==1) {
+                    return TransactionsHistory;
+                }
+
+                List<String> updatedList = new ArrayList<>();
+
+                for(int i=0;i<TransactionsHistory.size()-1;i+=2) {
+                    updatedList.add(MergeHashValue(TransactionsHistory.get(i), TransactionsHistory.get(i+1)))
+                }
+
+                if(TransactionsHistory.size()%2==1) {
+                    updatedList.add(MergeHashValue(TransactionsHistory.get(TransactionsHistory.size()-1), TransactionsHistory.get(TransactionsHistory.size()-1)));
+                }
+                return construct(updatedList);
+            }
+
+            private String MergeHashValue(String hash1, String hash2) {
+                String mergedHash = hash1+hash2;
+
+                Blockchain accessBlockchain = new Blockchain();
+                Blockchain.ProductionGradle accessEncryption = accessBlockchain.new ProductionGradle();
+                return accessEncryption.EncryptionMechanism(mergedHash);
+            }
+
+            
+        }
         private Boolean Transaction() {
             System.out.println("\nYou have a total amount of " + blockchain.get(0).accessData + " Gas left.");
             System.out.println("Your ID is: " + blockchain.get(0).accessHashValue);

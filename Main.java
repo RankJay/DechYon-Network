@@ -1,5 +1,5 @@
 import java.util.*;
-//import sun.security.krb5.EncryptionKey;
+import sun.security.krb5.EncryptionKey;
 import java.io.*;
 import java.security.*; 
 
@@ -56,7 +56,7 @@ class Block implements accessBlockchain {
         this.accessHashValue = this.hashValue;
         this.TransactionFee = 0.01*Integer.parseInt(this.data);
         //System.out.println("Data: " + this.data);
-        System.out.println("Generated Hash-Value is: " + this.hashValue);
+        System.out.println("Generated Hash-Value is: " + this.hashValue + "\n");
     } 
 
     private String generateHashValue() { 
@@ -78,7 +78,16 @@ class Block implements accessBlockchain {
 
 class Blockchain { 
     private static ArrayList<Block> blockchain = new ArrayList<Block>();
+    private static List<String> NewTransactionAddToHistory = new LinkedList<String>();
     private static Scanner scanner = new Scanner(System.in);
+
+    /*
+    public static void BlockchainEvaluation() {
+        for(int i=0;i<blockchain.size();i++) {
+            System.out.println(blockchain.get(i).data);
+        }
+    }
+    */
 
     class ProductionGradle {
 
@@ -103,7 +112,7 @@ class Blockchain {
                 Thread.sleep(1500);
                 while(counter != NoOfBlock) {
                     blockchain.add(new Block("0", blockchain.get(blockchain.size() - 1).accessHashValue));
-                    accessIntegrations.Decentralized_Blockchain_Validation();
+                    //accessIntegrations.Decentralized_Blockchain_Validation();
                     Thread.sleep(1500);
                     counter++;
                 }
@@ -111,6 +120,8 @@ class Blockchain {
             catch (InterruptedException ex) {
                 System.out.println("Blockchain abruptly broken.");
             }
+
+            //scanner.close();
             System.out.println("Blockchain is produced...\n");
         }
         protected String EncryptionMechanism(String blockEncodedDetails) { 
@@ -138,7 +149,11 @@ class Blockchain {
         }
     }
     
-    class IntegrationsHouse {
+    static class IntegrationsHouse {
+
+        //private List<String> NewTransactionAddToHistory = new LinkedList<String>();
+        static IntegrationsHouse accessHistory = new IntegrationsHouse();
+
         protected void accessTransaction() {
             IntegrationsHouse accessIntegrations = new IntegrationsHouse();
             accessIntegrations.Transaction();
@@ -148,14 +163,20 @@ class Blockchain {
             accessIntegrations.Decentralized_Blockchain_Validation();
         }
 
+        private static void Evaluation() {
+            for (int i=0;i<NewTransactionAddToHistory.size();i++) {
+                System.out.println((i+1) + ":" + NewTransactionAddToHistory.get(i));
+            }
+        }
+
         class MerkleTrees {
             private List<String> TransactionsHistory;
 
-            private MerkleTrees(List<String> TransactionsHistory) {
+            public MerkleTrees(List<String> TransactionsHistory) {
                 this.TransactionsHistory = TransactionsHistory;
             }
             
-            private List<String> GetMerkleRoot() {
+            public List<String> GetMerkleRoot() {
                 return construct(this.TransactionsHistory);
             }
 
@@ -167,17 +188,18 @@ class Blockchain {
                 List<String> updatedList = new ArrayList<>();
 
                 for(int i=0;i<TransactionsHistory.size()-1;i+=2) {
-                    updatedList.add(MergeHashValue(TransactionsHistory.get(i), TransactionsHistory.get(i+1)))
+                    updatedList.add(MergeHashValue(TransactionsHistory.get(i), TransactionsHistory.get(i+1)));
                 }
 
                 if(TransactionsHistory.size()%2==1) {
                     updatedList.add(MergeHashValue(TransactionsHistory.get(TransactionsHistory.size()-1), TransactionsHistory.get(TransactionsHistory.size()-1)));
                 }
+                
                 return construct(updatedList);
             }
 
             private String MergeHashValue(String hash1, String hash2) {
-                String mergedHash = hash1+hash2;
+                String mergedHash = hash1 + hash2;
 
                 Blockchain accessBlockchain = new Blockchain();
                 Blockchain.ProductionGradle accessEncryption = accessBlockchain.new ProductionGradle();
@@ -186,6 +208,7 @@ class Blockchain {
 
             
         }
+
         private Boolean Transaction() {
             System.out.println("\nYou have a total amount of " + blockchain.get(0).accessData + " Gas left.");
             System.out.println("Your ID is: " + blockchain.get(0).accessHashValue);
@@ -193,10 +216,13 @@ class Blockchain {
             System.out.print("\nClient ID : ");
             String ClientID = scanner.next();
             System.out.print("Amount to be transfered: ");
-            int amount = scanner.nextInt();
+            double amount = scanner.nextDouble();
             double TransactionFee = 0.01*Double.parseDouble(String.valueOf(amount));
+
+            //List<String> NewTransactionAddToHistory = new LinkedList<>();
+
             try {
-                if(amount<=Integer.parseInt(blockchain.get(0).accessData)) {
+                if(amount<=Double.parseDouble(blockchain.get(0).accessData)) {
                     if(amount<0) {
                         throw new NegativeGasNotAllowed();
                     }
@@ -205,18 +231,27 @@ class Blockchain {
                     }
                     for(int j=0;j<blockchain.size();j++) {
                         if (blockchain.get(j).accessHashValue.equals(ClientID)) {
-                            blockchain.get(0).data = String.valueOf(Integer.parseInt(blockchain.get(0).accessData) - amount - TransactionFee);
+                            long timeFootPrint = new Date().getTime();
+
+                            blockchain.get(0).data = String.valueOf(Double.parseDouble(blockchain.get(0).accessData) - amount - TransactionFee);
                             blockchain.get(0).accessData = blockchain.get(0).data;
-                            blockchain.get(j).data = String.valueOf(Integer.parseInt(blockchain.get(j).accessData) + amount);
+                            blockchain.get(j).data = String.valueOf(Double.parseDouble(blockchain.get(j).accessData) + amount);
                             blockchain.get(j).accessData = blockchain.get(j).data;
                             
                             System.out.println("\n" + blockchain.get(j).data + " Gas sent to account, having Client ID: " + blockchain.get(j).accessHashValue);
                             System.out.println("You are left with " + blockchain.get(0).data + " Gas");
+
+                            NewTransactionAddToHistory.add(amount + blockchain.get(0).accessHashValue + ClientID + timeFootPrint);
+
                             return true;
                         }
                     }
-                    blockchain.get(0).data = String.valueOf(Integer.parseInt(blockchain.get(0).accessData) - TransactionFee);
+                    blockchain.get(0).data = String.valueOf(Double.parseDouble(blockchain.get(0).accessData) - TransactionFee);
                     blockchain.get(0).accessData = blockchain.get(0).data;
+
+                    long selfTimeFootPrint = new Date().getTime();
+                    NewTransactionAddToHistory.add(TransactionFee + blockchain.get(0).accessHashValue + selfTimeFootPrint);
+
                     return true;
                 }
                 else {
@@ -270,8 +305,13 @@ class Blockchain {
                     System.out.println("Invalid Block was found.\n");
                 }
             }
-    
+
+            //IntegrationsHouse accessHistory = new IntegrationsHouse();
+            IntegrationsHouse.MerkleTrees Process = accessHistory.new MerkleTrees(NewTransactionAddToHistory);
+            System.out.println("Merkle Root: " + Process.GetMerkleRoot());
             System.out.println("Decentralized Blockchain Validation successfully completed !!\n");
+
+            Evaluation();
             return true; 
         }
     }
@@ -288,9 +328,19 @@ public class Main extends Exception {
         Blockchain.ProductionGradle GenesisGradle = newBlockchainProduction.new ProductionGradle();
         GenesisGradle.accessGenesisChamber();
 
-        Blockchain.IntegrationsHouse IntegrationGradle = newBlockchainProduction.new IntegrationsHouse();
+        //Blockchain.IntegrationsHouse IntegrationGradle = newBlockchainProduction.new IntegrationsHouse();
+        Blockchain.IntegrationsHouse IntegrationGradle = new Blockchain.IntegrationsHouse();
         //IntegrationGradle.accessDecentralized_Blockchain_Validation();
 
-        IntegrationGradle.accessTransaction();
+        int i = 0;
+        while(i!=5) {
+            IntegrationGradle.accessTransaction();
+            i++;
+        }
+
+        //Blockchain.BlockchainEvaluation();
+        //Blockchain.Evaluation();
+        //IntegrationGradle.Evaluation();
+        IntegrationGradle.accessDecentralized_Blockchain_Validation();
     } 
 } 

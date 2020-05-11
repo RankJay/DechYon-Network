@@ -1,5 +1,5 @@
 import java.util.*;
-import sun.security.krb5.EncryptionKey;
+//import sun.security.krb5.EncryptionKey;
 import java.io.*;
 import java.security.*; 
 import java.awt.event.*;

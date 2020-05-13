@@ -1,10 +1,18 @@
 import java.util.*;
 import java.io.*;
-import java.security.*; 
-//import sun.security.krb5.EncryptionKey;
+import java.security.*;
 import java.awt.event.*;
-import java.awt.*; 
+import java.awt.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.Writer;
 import javax.swing.*;
+import sun.security.krb5.EncryptionKey;
+import java.nio.file.AccessDeniedException;
+import javax.security.auth.login.AccountException;
+import java.time.DateTimeException;
 
 interface accessBlockchain {
     Hashtable <Integer, String> accessData = new Hashtable <Integer, String>();
@@ -13,6 +21,54 @@ interface accessBlockchain {
     String accessHashValue();
     String accessPreviousHashValue();
     double TransactionFee = 0;
+}
+
+
+interface accessCharacterStreams {
+    char getMaximumRepeatingCharacter(String str);
+    void readCharacterStreams() throws IOException;
+}
+
+
+class characterStreams implements accessCharacterStreams {
+    static final int ASCII_SIZE = 256; 
+    
+    public char getMaximumRepeatingCharacter(String str) { 
+        int count[] = new int[ASCII_SIZE]; 
+        for (int i=0;i<str.length();i++) {
+            count[str.charAt(i)]++;
+        }
+        int max = -1;
+        char answer = ' ';
+        for (int i=0;i<str.length();i++) { 
+            if (max < count[str.charAt(i)]) { 
+                max = count[str.charAt(i)]; 
+                answer = str.charAt(i); 
+            } 
+        }
+        return answer; 
+    }
+
+    public void readCharacterStreams() throws IOException { 
+		FileReader sourceStream = null; 
+		try { 
+			sourceStream = new FileReader("TransactionHistory.txt"); 
+			int temp;
+			System.out.println("Data found in .txt file is:");
+			String checkFrequencyOfString = "";
+			while ((temp = sourceStream.read()) != -1) {
+				checkFrequencyOfString+=(char)temp;			    
+			}
+			System.out.println(checkFrequencyOfString);
+			System.out.println("*********************");
+			//System.out.println("Max occurring character is '"+getMaximumRepeatingCharacter(checkFrequencyOfString)+"'");
+		} 
+		finally {
+			if (sourceStream != null) {
+				sourceStream.close();			    
+			}
+		} 
+	} 
 }
 
 class NegativeGasNotAllowed extends Exception {
@@ -94,12 +150,13 @@ class Block implements accessBlockchain {
         return this.accessPreviousHashValue;
     } 
 
-    public void accessTransactionHistory(String Root) {
+    protected void accessTransactionHistory(String Root) {
         this.PrivateMerkleRoot = Root;
-        System.out.println("Root address: " + Root);
+        //System.out.println("Private Key: " + Root);
+        Dashboard.Console1.append("\nPrivate Key: " + Root);
     }
 
-    public String accessTransactionHistory() {
+    protected String accessTransactionHistory() {
         String Root = this.PrivateMerkleRoot;
         return Root;
     }
@@ -109,6 +166,47 @@ class Blockchain {
     private static LinkedList<Block> blockchain = new LinkedList<Block>();
     private static LinkedList<String> NewTransactionAddToHistory = new LinkedList<String>();
     private static Scanner scanner = new Scanner(System.in);
+    protected static String keepPublicKey = "0";
+    protected static String keepPrivateKey;
+
+    private void AddTransactionHistoryToLocalDirectory(String inputStream) {
+        characterStreams obj = new characterStreams();
+        
+        System.out.println("Enter the string: ");
+        //String inputStream = blockchain.get(0).accessData.get(blockchain.get(0).accessData.size()-1);
+        
+        BufferedWriter bufferedWriter = null;
+        try {
+            String strContent = inputStream;
+            File file = new File("TransactionHistory.txt");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            Writer writer = new FileWriter(file);
+            bufferedWriter = new BufferedWriter(writer);
+            bufferedWriter.write(strContent);
+            //System.out.println("*********************");
+        }
+        catch (IOException e) {
+            System.out.println("There is no such directory!");
+        }
+        finally{
+            try {
+                if(bufferedWriter != null) {
+                    bufferedWriter.close();
+                }
+            }
+            catch(Exception e) {
+                System.out.println("Internel Error!");
+            }
+        }
+        try {
+            obj.readCharacterStreams();
+        }
+        catch(Exception e) {
+            System.out.println("Error reading .txt file!");
+        }
+    }
 
     /*
     public static void BlockchainEvaluation() {
@@ -150,7 +248,11 @@ class Blockchain {
                     
                     blockchain.get(blockchain.size() - 1).data.put(0, MinerID + "founded this block.");
                     blockchain.get(ID).data.put(blockchain.get(ID).data.size(), String.valueOf(Bounty));
-                    
+                    Dashboard.NewBlockCountWrite.setText(String.valueOf(Integer.parseInt(Dashboard.NewBlockCountWrite.getText()) + 1));
+                    Dashboard.NewBlockCount.setText(String.valueOf(Integer.parseInt(Dashboard.NewBlockCount.getText()) + 1));
+
+                    AddTransactionHistoryToLocalDirectory("New Block is mined with Hash Value: " + blockchain.get(blockchain.size()-1).accessHashValue + "\n\n");
+
                     //System.out.println("New Block is mined.");
                     Dashboard.MiningConsole.append("New Block is mined with Hash Value: " + blockchain.get(blockchain.size()-1).accessHashValue + "\n\n");
                     Dashboard.CurrentBalance.setText(blockchain.get(0).data.get(blockchain.get(0).data.size()-1));
@@ -164,6 +266,42 @@ class Blockchain {
             catch(NullPointerException e) {
                 //System.out.println("Latest Block mined was clustered with the Blockchain, hence discarded.");
                 Dashboard.MiningConsole.append("\n\nLatest Block mined was clustered with the Blockchain, hence discarded.\n\n");
+            }
+            catch(StackOverflowError e) {
+                //System.out.println("Blockchain was overflowed with multiple requests...Blockchain is reset");
+                Dashboard.MiningConsole.append("\n\nBlockchain was overflowed with multiple requests...Blockchain is reset\n\n");
+            }
+            catch(AccessControlException e) {
+                //System.out.println("Access to Blockchain was failed...client side error was generated");
+                Dashboard.MiningConsole.append("\n\nAccess to Blockchain was failed...client side error was generated\n\n");
+            }
+            catch(ArithmeticException e) {
+                //System.out.println("Invalid Input was generated from user.");
+                Dashboard.MiningConsole.append("\n\nInvalid Input was generated from user.\n\n");
+            }
+            catch(IllegalArgumentException e) {
+                //System.out.println("Data type of input was mismatched with required data type.");
+                Dashboard.MiningConsole.append("\n\nData type of input was mismatched with required data type.\n\n");
+            }
+            catch(ArrayStoreException e) {
+                //System.out.println("Unexpected termination error was generated due to unidentified storing of elements.");
+                Dashboard.MiningConsole.append("\n\nUnexpected termination error was generated due to unidentified storing of elements.\n\n");
+            }
+            catch(ProviderException e) {
+                //System.out.println("Misconfiguration errors or Unrecoverable internal error was generated.");
+                Dashboard.MiningConsole.append("\n\nMisconfiguration errors or Unrecoverable internal error was generated.\n\n");
+            }
+            catch(AssertionError e) {
+                //System.out.println("assertion was failed..");
+                Dashboard.MiningConsole.append("\n\nassertion was failed..\n\n");
+            }
+            catch(DateTimeException e) {
+                //System.out.println("Error validating Date-Time stamp of current block.");
+                Dashboard.MiningConsole.append("\n\nError validating Date-Time stamp of current block.\n\n");
+            }
+            catch(Exception e) {
+                //System.out.println(Internal error was generated.);
+                Dashboard.MiningConsole.append("\n\nInternal error was generated.\n\n");
             }
         }
 
@@ -198,14 +336,17 @@ class Blockchain {
             //System.out.println("Enter the no. of blocks to be produced:");
             //NoOfBlock = scanner.nextInt();
             
-            Dashboard.Console1.append("Blockchain is being produced at the rate of 1 block per 1.5 seconds:\n");
+            Dashboard.Console1.append("Blockchain is being produced at the rate of 1 block per 1.5 seconds:\n\n");
             try {
                 blockchain.add(new Block("10000", "0"));
+
+                keepPrivateKey = blockchain.get(0).accessHashValue();
                 NewTransactionAddToHistory.add("0");
+                
                 //Thread.sleep(1500);
                 while(counter != NoOfBlock) {
                     blockchain.add(new Block("0", blockchain.get(blockchain.size() - 1).accessHashValue));
-                    accessIntegrations.Decentralized_Blockchain_Validation();
+                    //accessIntegrations.Decentralized_Blockchain_Validation();
                     //Thread.sleep(1500);
                     counter++;
                 }
@@ -213,18 +354,49 @@ class Blockchain {
             }
             
             catch(StackOverflowError e) {
-                //System.out.print("");
-                Dashboard.Console1.append("");
+                //System.out.println("Blockchain was overflowed with multiple requests...Blockchain is reset");
+                Dashboard.MiningConsole.append("\n\nBlockchain was overflowed with multiple requests...Blockchain is reset\n\n");
                 
             }
             catch(NullPointerException e) {
                 //System.out.print("");
                 Dashboard.Console1.append("");
             }
-
             //catch (InterruptedException ex) {
             //    System.out.println("Blockchain abruptly broken.");
             //}
+            catch(AccessControlException e) {
+                //System.out.println("Access to Blockchain was failed...client side error was generated");
+                Dashboard.MiningConsole.append("\n\nAccess to Blockchain was failed...client side error was generated\n\n");
+            }
+            catch(ArithmeticException e) {
+                //System.out.println("Invalid Input was generated from user.");
+                Dashboard.MiningConsole.append("\n\nInvalid Input was generated from user.\n\n");
+            }
+            catch(IllegalArgumentException e) {
+                //System.out.println("Data type of input was mismatched with required data type.");
+                Dashboard.MiningConsole.append("\n\nData type of input was mismatched with required data type.\n\n");
+            }
+            catch(ArrayStoreException e) {
+                //System.out.println("Unexpected termination error was generated due to unidentified storing of elements.");
+                Dashboard.MiningConsole.append("\n\nUnexpected termination error was generated due to unidentified storing of elements.\n\n");
+            }
+            catch(ProviderException e) {
+                //System.out.println("Misconfiguration errors or Unrecoverable internal error was generated.");
+                Dashboard.MiningConsole.append("\n\nMisconfiguration errors or Unrecoverable internal error was generated.\n\n");
+            }
+            catch(AssertionError e) {
+                //System.out.println("assertion was failed..");
+                Dashboard.MiningConsole.append("\n\nassertion was failed..\n\n");
+            }
+            catch(DateTimeException e) {
+                //System.out.println("Error validating Date-Time stamp of current block.");
+                Dashboard.MiningConsole.append("\n\nError validating Date-Time stamp of current block.\n\n");
+            }
+            catch(Exception e) {
+                //System.out.println(Internal error was generated.);
+                Dashboard.MiningConsole.append("\n\nInternal error was generated.\n\n");
+            }
 
             //scanner.close();
             //System.out.println("Blockchain is produced...\n");
@@ -273,6 +445,8 @@ class Blockchain {
                     ConfirmationKey.ExecuteActionPerformed(evt);
 
                     if(PublicKey.equals(Process.GetMerkleRoot().get(0)) && ConfirmationKey.Flag==1) {
+                        //System.out.print("Public-Key successfully verified...\n");
+                        Dashboard.Console1.append("Public-Key successfully verified...\n");
                         accessIntegrations.Transaction();
                     }
                 }
@@ -361,10 +535,14 @@ class Blockchain {
                             if(0<=(Double.parseDouble(blockchain.get(0).accessData.get(blockchain.get(0).data.size()-1)) - amount - TransactionFee)) {
                                 
                                 //System.out.print("Enter your Private Key to execute transactions: ");
+                                Dashboard.Console1.append("\nEnter your Private Key to execute transactions: \n");
                                 //String PrivateKey = scanner.next();
                                 String PrivateKey = ConfirmationKey.PrivateKey.getText();
                                 
                                 if(PrivateKey.equals(blockchain.get(0).accessTransactionHistory())) {
+                                    //System.out.print("Private Key successfully verified...\n");
+                                    Dashboard.Console1.append("Private Key successfully verified...\n");
+                                    keepPrivateKey = blockchain.get(0).accessTransactionHistory();
 
                                     blockchain.get(0).data.put(blockchain.get(0).data.size(), String.valueOf(Double.parseDouble((String)blockchain.get(0).accessData.get(blockchain.get(0).data.size()-1)) - amount - TransactionFee));
                                     blockchain.get(0).accessData = blockchain.get(0).data;
@@ -378,9 +556,10 @@ class Blockchain {
                                     IntegrationsHouse.MerkleTrees Receiver = accessIntegrations.new MerkleTrees(blockchain.get(j).TransactionHistory);
 
                                     NewTransactionAddToHistory.add(amount + blockchain.get(0).accessHashValue + ClientID + timeFootPrint);
-                                    
+                                    Dashboard.Console1.append("\n");
                                     blockchain.get(0).accessTransactionHistory(Sender.GetMerkleRoot().get(0));
                                     blockchain.get(j).accessTransactionHistory(Receiver.GetMerkleRoot().get(0));
+                                    Dashboard.Console1.append("\n\n");
 
                                     //System.out.println("\n" + amount + " Gas sent to account, having Client ID: " + blockchain.get(j).accessHashValue);
                                     //System.out.println("You are left with " + blockchain.get(0).data.get(blockchain.get(0).data.size()-1) + " Gas");
@@ -393,6 +572,15 @@ class Blockchain {
                                     //System.out.println("Merkle Root: " + Process.GetMerkleRoot().get(0));
                                     Dashboard.Console1.append("\nNew Public-Key: " + Process.GetMerkleRoot().get(0) + "\n");
                                     Dashboard.NOOfTransactions.setText(String.valueOf(Dashboard.counter+=1));
+                                    
+                                    //ConfirmationKey UpdateKeyValues = new ConfirmationKey();
+                                    //ConfirmationKey.PublicKeyWrite.setText(Process.GetMerkleRoot().get(0));
+                                    //ConfirmationKey.PrivateKeyWrite.setText(Sender.GetMerkleRoot().get(0));
+                                    keepPublicKey = Process.GetMerkleRoot().get(0);
+                                    keepPrivateKey = blockchain.get(0).accessTransactionHistory();
+
+                                    Blockchain newBlockchainProduction = new Blockchain();
+                                    newBlockchainProduction.AddTransactionHistoryToLocalDirectory(amount + " Gas sent to account, having Client ID: " + blockchain.get(j).accessHashValue);
 
                                     return true;
                                 }
@@ -421,12 +609,12 @@ class Blockchain {
             }
 
             catch(StackOverflowError e) {
-                //System.out.print("");
-                Dashboard.Console1.append("\n");
+                //System.out.println("Blockchain was overflowed with multiple requests...Blockchain is reset");
+                Dashboard.MiningConsole.append("\n\nBlockchain was overflowed with multiple requests...Blockchain is reset\n\n");
             }
             catch(NullPointerException e) {
-                //System.out.print("");
-                Dashboard.Console1.append("\n");
+                //System.out.println("Latest Block mined was clustered with the Blockchain, hence discarded.");
+                Dashboard.MiningConsole.append("\n\nLatest Block mined was clustered with the Blockchain, hence discarded.\n\n");
             }
             catch(NumberFormatException e) {
                 //System.out.print("\nNumber format Exception.\n");
@@ -444,6 +632,42 @@ class Blockchain {
             catch(NegativeGasNotAllowed ex) {
                 //System.out.println(amount + " cannot be processed.");
                 Dashboard.Console1.append("\n" + amount + " cannot be processed.\n\n");
+            }
+            //catch(InterruptedException e) {
+                //System.out.println("Force Interruption was detected while mining the new Block");
+            //    Dashboard.MiningConsole.append("\n\nForce Interruption was detected while mining the new Block\n\n");
+            //}
+            catch(AccessControlException e) {
+                //System.out.println("Access to Blockchain was failed...client side error was generated");
+                Dashboard.MiningConsole.append("\n\nAccess to Blockchain was failed...client side error was generated\n\n");
+            }
+            catch(ArithmeticException e) {
+                //System.out.println("Invalid Input was generated from user.");
+                Dashboard.MiningConsole.append("\n\nInvalid Input was generated from user.\n\n");
+            }
+            catch(IllegalArgumentException e) {
+                //System.out.println("Data type of input was mismatched with required data type.");
+                Dashboard.MiningConsole.append("\n\nData type of input was mismatched with required data type.\n\n");
+            }
+            catch(ArrayStoreException e) {
+                //System.out.println("Unexpected termination error was generated due to unidentified storing of elements.");
+                Dashboard.MiningConsole.append("\n\nUnexpected termination error was generated due to unidentified storing of elements.\n\n");
+            }
+            catch(ProviderException e) {
+                //System.out.println("Misconfiguration errors or Unrecoverable internal error was generated.");
+                Dashboard.MiningConsole.append("\n\nMisconfiguration errors or Unrecoverable internal error was generated.\n\n");
+            }
+            catch(AssertionError e) {
+                //System.out.println("assertion was failed..");
+                Dashboard.MiningConsole.append("\n\nassertion was failed..\n\n");
+            }
+            catch(DateTimeException e) {
+                //System.out.println("Error validating Date-Time stamp of current block.");
+                Dashboard.MiningConsole.append("\n\nError validating Date-Time stamp of current block.\n\n");
+            }
+            catch(Exception e) {
+                //System.out.println(Internal error was generated.);
+                Dashboard.MiningConsole.append("\n\nInternal error was generated.\n\n");
             }
             return false;
         }
@@ -481,8 +705,49 @@ class Blockchain {
                     Dashboard.Console1.append("\n\nBlocks were overproduced as a result of which Blockchain is desynthesized.\n\n");
                 }
                 //catch(InterruptedException e) {
-                //    System.out.println("Invalid Block was found.\n");
+                //    //System.out.println("Force Interruption was detected while mining the new Block");
+                //    Dashboard.MiningConsole.append("\n\nForce Interruption was detected while mining the new Block\n\n");
                 //}
+                catch(NullPointerException e) {
+                    //System.out.println("Latest Block mined was clustered with the Blockchain, hence discarded.");
+                    Dashboard.MiningConsole.append("\n\nLatest Block mined was clustered with the Blockchain, hence discarded.\n\n");
+                }
+                catch(StackOverflowError e) {
+                    //System.out.println("Blockchain was overflowed with multiple requests...Blockchain is reset");
+                    Dashboard.MiningConsole.append("\n\nBlockchain was overflowed with multiple requests...Blockchain is reset\n\n");
+                }
+                catch(AccessControlException e) {
+                    //System.out.println("Access to Blockchain was failed...client side error was generated");
+                    Dashboard.MiningConsole.append("\n\nAccess to Blockchain was failed...client side error was generated\n\n");
+                }
+                catch(ArithmeticException e) {
+                    //System.out.println("Invalid Input was generated from user.");
+                    Dashboard.MiningConsole.append("\n\nInvalid Input was generated from user.\n\n");
+                }
+                catch(IllegalArgumentException e) {
+                    //System.out.println("Data type of input was mismatched with required data type.");
+                    Dashboard.MiningConsole.append("\n\nData type of input was mismatched with required data type.\n\n");
+                }
+                catch(ArrayStoreException e) {
+                    //System.out.println("Unexpected termination error was generated due to unidentified storing of elements.");
+                    Dashboard.MiningConsole.append("\n\nUnexpected termination error was generated due to unidentified storing of elements.\n\n");
+                }
+                catch(ProviderException e) {
+                    //System.out.println("Misconfiguration errors or Unrecoverable internal error was generated.");
+                    Dashboard.MiningConsole.append("\n\nMisconfiguration errors or Unrecoverable internal error was generated.\n\n");
+                }
+                catch(AssertionError e) {
+                    //System.out.println("assertion was failed..");
+                    Dashboard.MiningConsole.append("\n\nassertion was failed..\n\n");
+                }
+                catch(DateTimeException e) {
+                    //System.out.println("Error validating Date-Time stamp of current block.");
+                    Dashboard.MiningConsole.append("\n\nError validating Date-Time stamp of current block.\n\n");
+                }
+                catch(Exception e) {
+                    //System.out.println(Internal error was generated.);
+                    Dashboard.MiningConsole.append("\n\nInternal error was generated.\n\n");
+                }
             }
             //System.out.println("Decentralized Blockchain Validation successfully completed !!\n");
             Dashboard.Console1.append("\nDecentralized Blockchain Validation successfully completed !!\n");
@@ -504,11 +769,24 @@ class ConfirmationKey extends javax.swing.JFrame {
     //private static Blockchain.BlockchainMining MiningGradle = newBlockchainProduction.new BlockchainMining();
     //protected static int counter = 0;
 
+    public static javax.swing.JButton Access;
+    public static javax.swing.JPanel Background2;
+    public static javax.swing.JLabel EnterPublicKeyWrite;
+    public static javax.swing.JLabel EnterYourPrivateKeyWrite;
+    public static javax.swing.JButton Execute;
+    public static javax.swing.JTextField PrivateKey;
+    public static javax.swing.JLabel PrivateKeyWrite;
+    public static javax.swing.JTextField PublicKey;
+    public static javax.swing.JLabel PublicKeyWrite;
+    public static javax.swing.JLabel ValidatingConfirmation;
+    public static javax.swing.JLabel jLabel1;
+    public static int Flag = 0;
+
     public ConfirmationKey() {
-        initComponents();
+        InitializeValidatingConfirmationJFrame();
     }
 
-    public void initComponents() {
+    public void InitializeValidatingConfirmationJFrame() {
 
         Background2 = new javax.swing.JPanel();
         PublicKey = new javax.swing.JTextField();
@@ -524,25 +802,25 @@ class ConfirmationKey extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
-        Background2.setBackground(new java.awt.Color(24, 25, 29));
+        Background2.setBackground(new java.awt.Color(4, 12, 0));
 
-        PublicKey.setBackground(new java.awt.Color(42, 43, 49));
+        PublicKey.setBackground(new java.awt.Color(0, 0, 0));
         PublicKey.setFont(new java.awt.Font("Segoe UI", 1, 14));
         PublicKey.setForeground(new java.awt.Color(100, 100, 100));
         PublicKey.setText("Enter your Public-Key");
-        PublicKey.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(122, 194, 49), 3));
+        PublicKey.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(67, 191, 7), 3));
 
-        PrivateKey.setBackground(new java.awt.Color(42, 43, 49));
+        PrivateKey.setBackground(new java.awt.Color(0, 0, 0));
         PrivateKey.setFont(new java.awt.Font("Segoe UI", 1, 14));
         PrivateKey.setForeground(new java.awt.Color(100, 100, 100));
         PrivateKey.setText("Enter your Private-Key");
-        PrivateKey.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(42, 43, 49), 3, true));
+        PrivateKey.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 3, true));
         
 
         Access.setFont(new java.awt.Font("Microsoft New Tai Lue", 1, 18));
         Access.setForeground(new java.awt.Color(255, 255, 255));
         Access.setText("Access");
-        Access.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(122, 194, 49), 3));
+        Access.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(67, 191, 7), 3));
         Access.setContentAreaFilled(false);
         Access.setFocusPainted(false);
         Access.addActionListener(new java.awt.event.ActionListener() {
@@ -561,7 +839,7 @@ class ConfirmationKey extends javax.swing.JFrame {
 
         Execute.setBackground(new java.awt.Color(138, 255, 19));
         Execute.setFont(new java.awt.Font("Segoe UI", 1, 18));
-        Execute.setForeground(new java.awt.Color(72, 136, 32));
+        Execute.setForeground(new java.awt.Color(31, 93, 0));
         Execute.setText("Execute");
         Execute.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(138, 255, 19), 4, true));
         Execute.setContentAreaFilled(false);
@@ -575,16 +853,18 @@ class ConfirmationKey extends javax.swing.JFrame {
         });
 
         EnterPublicKeyWrite.setFont(new java.awt.Font("Segoe UI", 1, 18));
-        EnterPublicKeyWrite.setForeground(new java.awt.Color(122, 194, 49));
+        EnterPublicKeyWrite.setForeground(new java.awt.Color(67, 191, 7));
         EnterPublicKeyWrite.setText("Enter your Public-Key for accessing Mainframe :");
 
         PublicKeyWrite.setFont(new java.awt.Font("Segoe UI", 0, 13));
         PublicKeyWrite.setForeground(new java.awt.Color(100, 100, 100));
-        PublicKeyWrite.setText("PublicKey");
+        //PublicKeyWrite.setText("PublicKey");        
+        PublicKeyWrite.setText(Blockchain.keepPublicKey);
 
         PrivateKeyWrite.setFont(new java.awt.Font("Segoe UI", 0, 13));
         PrivateKeyWrite.setForeground(new java.awt.Color(100, 100, 100));
         PrivateKeyWrite.setText("PrivateKey");
+        
 
         jLabel1.setIcon(new javax.swing.ImageIcon("F:\\Group3.png"));
 
@@ -661,9 +941,10 @@ class ConfirmationKey extends javax.swing.JFrame {
     }
 
     public static void AccessActionPerformed(java.awt.event.ActionEvent evt) {
+        PrivateKeyWrite.setText(Blockchain.keepPrivateKey);
         EnterPublicKeyWrite.setForeground(new java.awt.Color(100, 100, 100));
-        PrivateKey.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(122, 194, 49), 3, true));
-        EnterYourPrivateKeyWrite.setForeground(new java.awt.Color(122, 194, 49));   
+        PrivateKey.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(67, 191, 7), 3, true));
+        EnterYourPrivateKeyWrite.setForeground(new java.awt.Color(67, 191, 7));   
         PublicKey.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(42, 43, 49), 3, true));
         Execute.setEnabled(true);
         Access.setEnabled(false);
@@ -702,18 +983,6 @@ class ConfirmationKey extends javax.swing.JFrame {
             }
         });
     }
-    public static javax.swing.JButton Access;
-    public static javax.swing.JPanel Background2;
-    public static javax.swing.JLabel EnterPublicKeyWrite;
-    public static javax.swing.JLabel EnterYourPrivateKeyWrite;
-    public static javax.swing.JButton Execute;
-    public static javax.swing.JTextField PrivateKey;
-    public static javax.swing.JLabel PrivateKeyWrite;
-    public static javax.swing.JTextField PublicKey;
-    public static javax.swing.JLabel PublicKeyWrite;
-    public static javax.swing.JLabel ValidatingConfirmation;
-    public static javax.swing.JLabel jLabel1;
-    public static int Flag = 0;
 }
 
 
@@ -728,11 +997,80 @@ public class Dashboard extends javax.swing.JFrame {
     private static Blockchain.BlockchainMining MiningGradle = newBlockchainProduction.new BlockchainMining();
     protected static int counter = 0;
 
+    private javax.swing.JLabel AMOUNT;
+    private javax.swing.JTextField Amount;
+    protected static javax.swing.JLabel AmountEntryUse;
+    private javax.swing.JLabel BTC;
+    private javax.swing.JPanel Background;
+    private javax.swing.JLabel Bitcoin;
+    private javax.swing.JLabel BitcoinImage;
+    private javax.swing.JPanel BitcoinPanel;
+    private javax.swing.JLabel BlockMining;
+    private javax.swing.JPanel BlockMiningTab;
+    private javax.swing.JPanel BlockchainProduction;
+    private javax.swing.JLabel Bounty;
+    private javax.swing.JLabel BountyCountWrite;
+    private javax.swing.JLabel CLIENTID;
+    private javax.swing.JTextField ClientID;
+    private javax.swing.JPanel ConsensusTab;
+    private javax.swing.JScrollPane Console;
+    protected static javax.swing.JLabel ClientIDEntryUse;
+    protected static javax.swing.JTextArea Console1;
+    protected static javax.swing.JLabel BlockEntryUse;
+    protected static javax.swing.JLabel CurrentBalance;
+    private javax.swing.JLabel CurrentBalanceWrite;
+    private javax.swing.JPanel CurrentTab;
+    private javax.swing.JLabel DASH;
+    private javax.swing.JLabel Dash;
+    private javax.swing.JPanel DashPanel;
+    private javax.swing.JLabel Dashboard;
+    private javax.swing.JLabel Dashboard1;
+    private javax.swing.JLabel DashboardImage;
+    private javax.swing.JLabel ETH;
+    private javax.swing.JLabel Ethereum;
+    private javax.swing.JLabel EthereumImage;
+    private javax.swing.JPanel EthereumPanel;
+    private javax.swing.JButton ExecuteTransaction;
+    private javax.swing.JButton ExecuteTransaction2;
+    private javax.swing.JTextField HashOfMinedBlock;
+    private javax.swing.JLabel LTC;
+    private javax.swing.JLabel LitcoinImage;
+    private javax.swing.JLabel Litecoin;
+    private javax.swing.JPanel LitecoinPanel;
+    protected static javax.swing.JTextArea MiningConsole;
+    private javax.swing.JLabel MyWallets;
+    protected static javax.swing.JLabel NOOfTransactions;
+    private javax.swing.JLabel NewBlock;
+    protected static javax.swing.JLabel NewBlockCount;
+    protected static javax.swing.JLabel NewBlockCountWrite;
+    private javax.swing.JLabel NextBlockWrite;
+    private javax.swing.JLabel NoOfWallet;
+    private javax.swing.JLabel Overview;
+    private javax.swing.JButton ProduceBlockchain;
+    private javax.swing.JTextField Search;
+    private javax.swing.JPanel TabBar;
+    private javax.swing.JPanel TransactionExecution;
+    private javax.swing.JLabel Transactions;
+    private javax.swing.JLabel USD;
+    private javax.swing.JLabel USDBounty;
+    private javax.swing.JLabel USDBountyWrite;
+    protected static javax.swing.JTextField UserID;
+    private javax.swing.JButton ValidateMinedBlock;
+    private javax.swing.JLabel WALLET;
+    private javax.swing.JLabel Wallet;
+    private javax.swing.JPanel WalletCard;
+    private javax.swing.JTextField WalletNumber;
+    private javax.swing.JLabel YourID;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JScrollPane jScrollPane1;
+
     public Dashboard() {
-        initComponents();
+        InitializeDashboardJFrame();
     }
 
-    private void initComponents() {
+    private void InitializeDashboardJFrame() {
 
         Background = new javax.swing.JPanel();
         BlockMiningTab = new javax.swing.JPanel();
@@ -805,9 +1143,9 @@ public class Dashboard extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
 
-        Background.setBackground(new java.awt.Color(24, 25, 29));
+        Background.setBackground(new java.awt.Color(0, 0, 0));
 
-        BlockMiningTab.setBackground(new java.awt.Color(29, 32, 36));
+        BlockMiningTab.setBackground(new java.awt.Color(4, 12, 0));
 
         BlockMining.setFont(new java.awt.Font("Gilroy-Bold", 0, 21));
         BlockMining.setForeground(new java.awt.Color(125, 125, 125));
@@ -830,7 +1168,7 @@ public class Dashboard extends javax.swing.JFrame {
         NewBlockCount.setForeground(new java.awt.Color(255, 255, 255));
         NewBlockCount.setText("2543678");
 
-        MiningConsole.setBackground(new java.awt.Color(29, 32, 36));
+        MiningConsole.setBackground(new java.awt.Color(4, 12, 0));
         MiningConsole.setColumns(20);
         MiningConsole.setFont(new java.awt.Font("Consolas", 1, 14));
         MiningConsole.setForeground(new java.awt.Color(122, 194, 49));
@@ -841,7 +1179,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         ExecuteTransaction2.setBackground(new java.awt.Color(138, 255, 19));
         ExecuteTransaction2.setFont(new java.awt.Font("Segoe UI", 1, 18));
-        ExecuteTransaction2.setForeground(new java.awt.Color(72, 136, 32));
+        ExecuteTransaction2.setForeground(new java.awt.Color(31, 93, 0));
         ExecuteTransaction2.setText("Mine");
         ExecuteTransaction2.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(138, 255, 19), 4, true));
         ExecuteTransaction2.setContentAreaFilled(false);
@@ -853,9 +1191,9 @@ public class Dashboard extends javax.swing.JFrame {
             }
         });
 
-        jLabel5.setIcon(new javax.swing.ImageIcon("C:\\Users\\Hp\\Desktop\\folder\\FrontEnd\\src\\frontend\\Buffer.png"));
+        jLabel5.setIcon(new javax.swing.ImageIcon(".\\Buffer.png"));
 
-        jLabel1.setIcon(new javax.swing.ImageIcon("C:\\Users\\Hp\\Desktop\\folder\\FrontEnd\\src\\frontend\\Graph.png"));
+        jLabel1.setIcon(new javax.swing.ImageIcon(".\\Graph.png"));
 
         javax.swing.GroupLayout BlockMiningTabLayout = new javax.swing.GroupLayout(BlockMiningTab);
         BlockMiningTab.setLayout(BlockMiningTabLayout);
@@ -915,12 +1253,12 @@ public class Dashboard extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        Search.setBackground(new java.awt.Color(42, 43, 49));
+        Search.setBackground(new java.awt.Color(10, 10, 10));
         Search.setFont(new java.awt.Font("Segoe UI", 1, 13));
         Search.setForeground(new java.awt.Color(150, 150, 150));
         Search.setHorizontalAlignment(javax.swing.JTextField.LEFT);
         Search.setText("search");
-        Search.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(42, 43, 49), 5, true));
+        Search.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(10, 10, 10), 5, true));
         Search.setMargin(new java.awt.Insets(10, 10, 10, 10));
         Search.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -928,11 +1266,11 @@ public class Dashboard extends javax.swing.JFrame {
             }
         });
 
-        TabBar.setBackground(new java.awt.Color(29, 32, 36));
+        TabBar.setBackground(new java.awt.Color(4, 12, 0));
 
-        CurrentTab.setBackground(new java.awt.Color(42, 43, 49));
+        CurrentTab.setBackground(new java.awt.Color(9, 28, 0));
 
-        DashboardImage.setIcon(new javax.swing.ImageIcon("C:\\Users\\Hp\\Desktop\\folder\\FrontEnd\\src\\frontend\\Dashboard.png"));
+        DashboardImage.setIcon(new javax.swing.ImageIcon(".\\Dashboard.png"));
 
         javax.swing.GroupLayout CurrentTabLayout = new javax.swing.GroupLayout(CurrentTab);
         CurrentTab.setLayout(CurrentTabLayout);
@@ -969,14 +1307,14 @@ public class Dashboard extends javax.swing.JFrame {
         Dashboard.setForeground(new java.awt.Color(255, 255, 255));
         Dashboard.setText("Dashboard");
 
-        UserID.setBackground(new java.awt.Color(29, 32, 36));
+        UserID.setBackground(new java.awt.Color(0, 0, 0));
         UserID.setFont(new java.awt.Font("Segoe UI", 1, 14));
         UserID.setForeground(new java.awt.Color(200, 200, 200));
         UserID.setText("null");
         UserID.setToolTipText("");
         UserID.setAlignmentX(2.0F);
         UserID.setAlignmentY(2.0F);
-        UserID.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(122, 194, 49), 2, true));
+        UserID.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(67, 191, 7), 2, true));
         UserID.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
         UserID.setMinimumSize(new java.awt.Dimension(6, 23));
         UserID.setName("");
@@ -986,13 +1324,13 @@ public class Dashboard extends javax.swing.JFrame {
         YourID.setForeground(new java.awt.Color(255, 255, 255));
         YourID.setText("Your ID");
 
-        BlockchainProduction.setBackground(new java.awt.Color(42, 43, 49));
+        BlockchainProduction.setBackground(new java.awt.Color(9, 28, 0));
 
         NOOfTransactions.setFont(new java.awt.Font("Gilroy-Light", 0, 36));
         NOOfTransactions.setForeground(new java.awt.Color(255, 255, 255));
         NOOfTransactions.setText("0");
 
-        WalletCard.setBackground(new java.awt.Color(37, 37, 41));
+        WalletCard.setBackground(new java.awt.Color(0, 0, 0));
 
         Wallet.setFont(new java.awt.Font("Gilroy-Light", 0, 18));
         Wallet.setForeground(new java.awt.Color(255, 255, 255));
@@ -1045,7 +1383,7 @@ public class Dashboard extends javax.swing.JFrame {
         ProduceBlockchain.setFont(new java.awt.Font("Gilroy-SemiBold", 0, 18));
         ProduceBlockchain.setForeground(new java.awt.Color(255, 255, 255));
         ProduceBlockchain.setText("Produce Blockchain");
-        ProduceBlockchain.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(122, 194, 49), 3, true));
+        ProduceBlockchain.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(67, 191, 7), 3, true));
         ProduceBlockchain.setContentAreaFilled(false);
         ProduceBlockchain.setFocusPainted(false);
         ProduceBlockchain.addActionListener(new java.awt.event.ActionListener() {
@@ -1104,7 +1442,7 @@ public class Dashboard extends javax.swing.JFrame {
                 .addGap(33, 33, 33))
         );
 
-        TransactionExecution.setBackground(new java.awt.Color(29, 32, 36));
+        TransactionExecution.setBackground(new java.awt.Color(4, 12, 0));
 
         WALLET.setFont(new java.awt.Font("Gilroy-Bold", 0, 13));
         WALLET.setForeground(new java.awt.Color(150, 150, 150));
@@ -1118,28 +1456,28 @@ public class Dashboard extends javax.swing.JFrame {
         CLIENTID.setForeground(new java.awt.Color(150, 150, 150));
         CLIENTID.setText("CLIENT ID");
 
-        WalletNumber.setBackground(new java.awt.Color(42, 43, 49));
+        WalletNumber.setBackground(new java.awt.Color(0, 0, 0));
         WalletNumber.setFont(new java.awt.Font("Tahoma", 1, 13));
         WalletNumber.setForeground(new java.awt.Color(255, 255, 255));
         WalletNumber.setText("1");
-        WalletNumber.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(42, 43, 49), 5, true));
+        WalletNumber.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 5, true));
 
-        Amount.setBackground(new java.awt.Color(42, 43, 49));
+        Amount.setBackground(new java.awt.Color(0, 0, 0));
         Amount.setFont(new java.awt.Font("Segoe UI", 1, 13));
         Amount.setForeground(new java.awt.Color(255, 255, 255));
         Amount.setText("0");
-        Amount.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(42, 43, 49), 5, true));
+        Amount.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 5, true));
         Amount.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 BlockchainActionPerformed(evt);
             }
         });
 
-        ClientID.setBackground(new java.awt.Color(42, 43, 49));
+        ClientID.setBackground(new java.awt.Color(0, 0, 0));
         ClientID.setFont(new java.awt.Font("Segoe UI", 1, 13));
         ClientID.setForeground(new java.awt.Color(255, 255, 255));
         ClientID.setText("0");
-        ClientID.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(42, 43, 49), 5, true));
+        ClientID.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 5, true));
         ClientID.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 BlockchainActionPerformed(evt);
@@ -1149,7 +1487,7 @@ public class Dashboard extends javax.swing.JFrame {
         ExecuteTransaction.setFont(new java.awt.Font("Microsoft YaHei", 1, 18));
         ExecuteTransaction.setForeground(new java.awt.Color(255, 255, 255));
         ExecuteTransaction.setText("send");
-        ExecuteTransaction.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(122, 194, 49), 3));
+        ExecuteTransaction.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(67, 191, 7), 3));
         ExecuteTransaction.setContentAreaFilled(false);
         ExecuteTransaction.setFocusPainted(false);
         ExecuteTransaction.addActionListener(new java.awt.event.ActionListener() {
@@ -1199,7 +1537,7 @@ public class Dashboard extends javax.swing.JFrame {
                 .addGap(31, 31, 31))
         );
 
-        ConsensusTab.setBackground(new java.awt.Color(29, 32, 36));
+        ConsensusTab.setBackground(new java.awt.Color(4, 12, 0));
 
         Dashboard1.setFont(new java.awt.Font("Gilroy-Light", 1, 18));
         Dashboard1.setForeground(new java.awt.Color(255, 255, 255));
@@ -1210,17 +1548,17 @@ public class Dashboard extends javax.swing.JFrame {
         NextBlockWrite.setText("Next Block");
 
         USDBountyWrite.setFont(new java.awt.Font("Gilroy-Bold", 1, 14));
-        USDBountyWrite.setForeground(new java.awt.Color(125, 125, 125));
+        USDBountyWrite.setForeground(new java.awt.Color(28, 87, 0));
         USDBountyWrite.setText("USD");
 
-        HashOfMinedBlock.setBackground(new java.awt.Color(29, 32, 36));
+        HashOfMinedBlock.setBackground(new java.awt.Color(4, 12, 0));
         HashOfMinedBlock.setFont(new java.awt.Font("Segoe UI", 1, 14));
         HashOfMinedBlock.setForeground(new java.awt.Color(200, 200, 200));
         HashOfMinedBlock.setText("null");
         HashOfMinedBlock.setToolTipText("");
         HashOfMinedBlock.setAlignmentX(2.0F);
         HashOfMinedBlock.setAlignmentY(2.0F);
-        HashOfMinedBlock.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(122, 194, 49), 2, true));
+        HashOfMinedBlock.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(67, 191, 7), 2, true));
         HashOfMinedBlock.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
         HashOfMinedBlock.setMinimumSize(new java.awt.Dimension(6, 23));
         HashOfMinedBlock.setOpaque(false);
@@ -1248,7 +1586,7 @@ public class Dashboard extends javax.swing.JFrame {
         BountyCountWrite.setForeground(new java.awt.Color(138, 255, 19));
         BountyCountWrite.setText("2099");
 
-        jLabel4.setIcon(new javax.swing.ImageIcon("C:\\Users\\Hp\\Desktop\\folder\\FrontEnd\\src\\frontend\\Buffer.png"));
+        jLabel4.setIcon(new javax.swing.ImageIcon(".\\Buffer.png"));
 
         javax.swing.GroupLayout ConsensusTabLayout = new javax.swing.GroupLayout(ConsensusTab);
         ConsensusTab.setLayout(ConsensusTabLayout);
@@ -1304,15 +1642,15 @@ public class Dashboard extends javax.swing.JFrame {
                 .addContainerGap(24, Short.MAX_VALUE))
         );
 
-        Console1.setBackground(new java.awt.Color(29, 32, 36));
+        Console1.setBackground(new java.awt.Color(0, 0, 0));
         Console1.setColumns(20);
         Console1.setFont(new java.awt.Font("Consolas", 1, 14));
         Console1.setForeground(new java.awt.Color(122, 194, 49));
         Console1.setRows(5);
-        Console1.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(29, 32, 36), 1, true));
+        Console1.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(67, 191, 7), 1, true));
         Console.setViewportView(Console1);
 
-        BitcoinPanel.setBackground(new java.awt.Color(122, 194, 49));
+        BitcoinPanel.setBackground(new java.awt.Color(67, 191, 7));
         BitcoinPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 BitcoinPanelMouseClicked(evt);
@@ -1320,14 +1658,14 @@ public class Dashboard extends javax.swing.JFrame {
         });
 
         BTC.setFont(new java.awt.Font("Segoe UI", 1, 18));
-        BTC.setForeground(new java.awt.Color(72, 136, 32));
+        BTC.setForeground(new java.awt.Color(31, 93, 0));
         BTC.setText("BTC");
 
         Bitcoin.setFont(new java.awt.Font("Gilroy-Bold", 1, 30));
         Bitcoin.setForeground(new java.awt.Color(255, 255, 255));
         Bitcoin.setText("Bitcoin");
 
-        BitcoinImage.setIcon(new javax.swing.ImageIcon("C:\\Users\\Hp\\Desktop\\folder\\FrontEnd\\src\\frontend\\Bitcoin.png"));
+        BitcoinImage.setIcon(new javax.swing.ImageIcon(".\\Bitcoin.png"));
 
         javax.swing.GroupLayout BitcoinPanelLayout = new javax.swing.GroupLayout(BitcoinPanel);
         BitcoinPanel.setLayout(BitcoinPanelLayout);
@@ -1357,7 +1695,7 @@ public class Dashboard extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        EthereumPanel.setBackground(new java.awt.Color(29, 32, 36));
+        EthereumPanel.setBackground(new java.awt.Color(4, 12, 0));
         EthereumPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 EthereumPanelMouseClicked(evt);
@@ -1365,14 +1703,14 @@ public class Dashboard extends javax.swing.JFrame {
         });
 
         ETH.setFont(new java.awt.Font("Segoe UI", 1, 18));
-        ETH.setForeground(new java.awt.Color(100, 100, 100));
+        ETH.setForeground(new java.awt.Color(42, 172, 11));
         ETH.setText("ETH");
 
         Ethereum.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
         Ethereum.setForeground(new java.awt.Color(255, 255, 255));
         Ethereum.setText("Ethereum");
 
-        EthereumImage.setIcon(new javax.swing.ImageIcon("C:\\Users\\Hp\\Desktop\\folder\\FrontEnd\\src\\frontend\\Ethereum.png"));
+        EthereumImage.setIcon(new javax.swing.ImageIcon(".\\Ethereum.png"));
 
         javax.swing.GroupLayout EthereumPanelLayout = new javax.swing.GroupLayout(EthereumPanel);
         EthereumPanel.setLayout(EthereumPanelLayout);
@@ -1401,7 +1739,7 @@ public class Dashboard extends javax.swing.JFrame {
                 .addComponent(Ethereum))
         );
 
-        LitecoinPanel.setBackground(new java.awt.Color(29, 32, 36));
+        LitecoinPanel.setBackground(new java.awt.Color(4, 12, 0));
         LitecoinPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 LitecoinPanelMouseClicked(evt);
@@ -1409,14 +1747,14 @@ public class Dashboard extends javax.swing.JFrame {
         });
 
         LTC.setFont(new java.awt.Font("Segoe UI", 1, 18));
-        LTC.setForeground(new java.awt.Color(100, 100, 100));
+        LTC.setForeground(new java.awt.Color(42, 172, 11));
         LTC.setText("LTC");
 
         Litecoin.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
         Litecoin.setForeground(new java.awt.Color(255, 255, 255));
         Litecoin.setText("Litecoin");
 
-        LitcoinImage.setIcon(new javax.swing.ImageIcon("C:\\Users\\Hp\\Desktop\\folder\\FrontEnd\\src\\frontend\\Litecoin.png"));
+        LitcoinImage.setIcon(new javax.swing.ImageIcon(".\\Litecoin.png"));
 
         javax.swing.GroupLayout LitecoinPanelLayout = new javax.swing.GroupLayout(LitecoinPanel);
         LitecoinPanel.setLayout(LitecoinPanelLayout);
@@ -1445,7 +1783,7 @@ public class Dashboard extends javax.swing.JFrame {
                 .addComponent(Litecoin))
         );
 
-        DashPanel.setBackground(new java.awt.Color(29, 32, 36));
+        DashPanel.setBackground(new java.awt.Color(4, 12, 0));
         DashPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 DashPanelMouseClicked(evt);
@@ -1453,7 +1791,7 @@ public class Dashboard extends javax.swing.JFrame {
         });
 
         DASH.setFont(new java.awt.Font("Segoe UI", 1, 18));
-        DASH.setForeground(new java.awt.Color(100, 100, 100));
+        DASH.setForeground(new java.awt.Color(42, 172, 11));
         DASH.setText("Dash");
 
         Dash.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
@@ -1628,59 +1966,59 @@ public class Dashboard extends javax.swing.JFrame {
     }                                                                                                   
 
     private void EthereumPanelMouseClicked(java.awt.event.MouseEvent evt) {                                           
-        EthereumPanel.setBackground(new java.awt.Color(122, 194, 49));  
-        ETH.setForeground(new java.awt.Color(72, 136, 32));
+        EthereumPanel.setBackground(new java.awt.Color(67, 191, 7));  
+        ETH.setForeground(new java.awt.Color(31, 93, 0));
         Ethereum.setFont(new java.awt.Font("Gilroy-Bold", 1, 30));
         Bitcoin.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
         Litecoin.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
         Dash.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
-        BitcoinPanel.setBackground(new java.awt.Color(29, 32, 36));
-        BTC.setForeground(new java.awt.Color(100, 100, 100));
-        LitecoinPanel.setBackground(new java.awt.Color(29, 32, 36));
-        LTC.setForeground(new java.awt.Color(100, 100, 100));
-        DashPanel.setBackground(new java.awt.Color(29, 32, 36));
-        DASH.setForeground(new java.awt.Color(100, 100, 100));
+        BitcoinPanel.setBackground(new java.awt.Color(4, 12, 0));
+        BTC.setForeground(new java.awt.Color(42, 172, 11));
+        LitecoinPanel.setBackground(new java.awt.Color(4, 12, 0));
+        LTC.setForeground(new java.awt.Color(42, 172, 11));
+        DashPanel.setBackground(new java.awt.Color(4, 12, 0));
+        DASH.setForeground(new java.awt.Color(42, 172, 11));
     }                                          
 
     private void LitecoinPanelMouseClicked(java.awt.event.MouseEvent evt) {                                           
-        EthereumPanel.setBackground(new java.awt.Color(29, 32, 36));
-        ETH.setForeground(new java.awt.Color(100, 100, 100));
-        BitcoinPanel.setBackground(new java.awt.Color(29, 32, 36));
-        BTC.setForeground(new java.awt.Color(100, 100, 100));
-        LitecoinPanel.setBackground(new java.awt.Color(122, 194, 49));
-        LTC.setForeground(new java.awt.Color(72, 136, 32));
+        EthereumPanel.setBackground(new java.awt.Color(4, 12, 0));
+        ETH.setForeground(new java.awt.Color(42, 172, 11));
+        BitcoinPanel.setBackground(new java.awt.Color(4, 12, 0));
+        BTC.setForeground(new java.awt.Color(42, 172, 11));
+        LitecoinPanel.setBackground(new java.awt.Color(67, 191, 7));
+        LTC.setForeground(new java.awt.Color(31, 93, 0));
         Litecoin.setFont(new java.awt.Font("Gilroy-Bold", 1, 30));
         Ethereum.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
         Bitcoin.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
         Dash.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
-        DashPanel.setBackground(new java.awt.Color(29, 32, 36));
-        DASH.setForeground(new java.awt.Color(100, 100, 100));        
+        DashPanel.setBackground(new java.awt.Color(4, 12, 0));
+        DASH.setForeground(new java.awt.Color(42, 172, 11));        
     }                                          
 
     private void BitcoinPanelMouseClicked(java.awt.event.MouseEvent evt) {                                          
-        EthereumPanel.setBackground(new java.awt.Color(29, 32, 36));
-        ETH.setForeground(new java.awt.Color(100, 100, 100));
-        BitcoinPanel.setBackground(new java.awt.Color(122, 194, 49));
+        EthereumPanel.setBackground(new java.awt.Color(4, 12, 0));
+        ETH.setForeground(new java.awt.Color(42, 172, 11));
+        BitcoinPanel.setBackground(new java.awt.Color(67, 191, 7));
         Bitcoin.setFont(new java.awt.Font("Gilroy-Bold", 1, 30));
         Ethereum.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
         Litecoin.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
         Dash.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
-        BTC.setForeground(new java.awt.Color(72, 136, 32));
-        LitecoinPanel.setBackground(new java.awt.Color(29, 32, 36));
-        LTC.setForeground(new java.awt.Color(100, 100, 100));
-        DashPanel.setBackground(new java.awt.Color(29, 32, 36));
-        DASH.setForeground(new java.awt.Color(100, 100, 100));        
+        BTC.setForeground(new java.awt.Color(31, 93, 0));
+        LitecoinPanel.setBackground(new java.awt.Color(4, 12, 0));
+        LTC.setForeground(new java.awt.Color(42, 172, 11));
+        DashPanel.setBackground(new java.awt.Color(4, 12, 0));
+        DASH.setForeground(new java.awt.Color(42, 172, 11));        
     }                                         
 
     private void DashPanelMouseClicked(java.awt.event.MouseEvent evt) {                                       
-         EthereumPanel.setBackground(new java.awt.Color(29, 32, 36));
-        ETH.setForeground(new java.awt.Color(100, 100, 100));
-        BitcoinPanel.setBackground(new java.awt.Color(29, 32, 36));
-        BTC.setForeground(new java.awt.Color(100, 100, 100));
-        LitecoinPanel.setBackground(new java.awt.Color(29, 32, 36));
-        LTC.setForeground(new java.awt.Color(100, 100, 100));
-        DashPanel.setBackground(new java.awt.Color(122, 194, 49));
-        DASH.setForeground(new java.awt.Color(72, 136, 32));        
+         EthereumPanel.setBackground(new java.awt.Color(4, 12, 0));
+        ETH.setForeground(new java.awt.Color(42, 172, 11));
+        BitcoinPanel.setBackground(new java.awt.Color(4, 12, 0));
+        BTC.setForeground(new java.awt.Color(42, 172, 11));
+        LitecoinPanel.setBackground(new java.awt.Color(4, 12, 0));
+        LTC.setForeground(new java.awt.Color(42, 172, 11));
+        DashPanel.setBackground(new java.awt.Color(67, 191, 7));
+        DASH.setForeground(new java.awt.Color(31, 93, 0));        
         Ethereum.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
         Bitcoin.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
         Litecoin.setFont(new java.awt.Font("Gilroy-Light", 0, 30));
@@ -1709,74 +2047,5 @@ public class Dashboard extends javax.swing.JFrame {
                 new Dashboard().setVisible(true);
             }
         });
-    }
-                   
-    private javax.swing.JLabel AMOUNT;
-    private javax.swing.JTextField Amount;
-    protected static javax.swing.JLabel AmountEntryUse;
-    private javax.swing.JLabel BTC;
-    private javax.swing.JPanel Background;
-    private javax.swing.JLabel Bitcoin;
-    private javax.swing.JLabel BitcoinImage;
-    private javax.swing.JPanel BitcoinPanel;
-    private javax.swing.JLabel BlockMining;
-    private javax.swing.JPanel BlockMiningTab;
-    private javax.swing.JPanel BlockchainProduction;
-    private javax.swing.JLabel Bounty;
-    private javax.swing.JLabel BountyCountWrite;
-    private javax.swing.JLabel CLIENTID;
-    private javax.swing.JTextField ClientID;
-    private javax.swing.JPanel ConsensusTab;
-    private javax.swing.JScrollPane Console;
-    protected static javax.swing.JLabel ClientIDEntryUse;
-    protected static javax.swing.JTextArea Console1;
-    protected static javax.swing.JLabel BlockEntryUse;
-    protected static javax.swing.JLabel CurrentBalance;
-    private javax.swing.JLabel CurrentBalanceWrite;
-    private javax.swing.JPanel CurrentTab;
-    private javax.swing.JLabel DASH;
-    private javax.swing.JLabel Dash;
-    private javax.swing.JPanel DashPanel;
-    private javax.swing.JLabel Dashboard;
-    private javax.swing.JLabel Dashboard1;
-    private javax.swing.JLabel DashboardImage;
-    private javax.swing.JLabel ETH;
-    private javax.swing.JLabel Ethereum;
-    private javax.swing.JLabel EthereumImage;
-    private javax.swing.JPanel EthereumPanel;
-    private javax.swing.JButton ExecuteTransaction;
-    private javax.swing.JButton ExecuteTransaction2;
-    private javax.swing.JTextField HashOfMinedBlock;
-    private javax.swing.JLabel LTC;
-    private javax.swing.JLabel LitcoinImage;
-    private javax.swing.JLabel Litecoin;
-    private javax.swing.JPanel LitecoinPanel;
-    protected static javax.swing.JTextArea MiningConsole;
-    private javax.swing.JLabel MyWallets;
-    protected static javax.swing.JLabel NOOfTransactions;
-    private javax.swing.JLabel NewBlock;
-    private javax.swing.JLabel NewBlockCount;
-    private javax.swing.JLabel NewBlockCountWrite;
-    private javax.swing.JLabel NextBlockWrite;
-    private javax.swing.JLabel NoOfWallet;
-    private javax.swing.JLabel Overview;
-    private javax.swing.JButton ProduceBlockchain;
-    private javax.swing.JTextField Search;
-    private javax.swing.JPanel TabBar;
-    private javax.swing.JPanel TransactionExecution;
-    private javax.swing.JLabel Transactions;
-    private javax.swing.JLabel USD;
-    private javax.swing.JLabel USDBounty;
-    private javax.swing.JLabel USDBountyWrite;
-    protected static javax.swing.JTextField UserID;
-    private javax.swing.JButton ValidateMinedBlock;
-    private javax.swing.JLabel WALLET;
-    private javax.swing.JLabel Wallet;
-    private javax.swing.JPanel WalletCard;
-    private javax.swing.JTextField WalletNumber;
-    private javax.swing.JLabel YourID;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JScrollPane jScrollPane1;                   
+    }                      
 }

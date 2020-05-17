@@ -14,6 +14,14 @@ import java.nio.file.AccessDeniedException;
 import javax.security.auth.login.AccountException;
 import java.time.DateTimeException;
 
+/*
+AuthPermission
+Policy
+PrivateCredentialPermission
+Subject
+SubjectDominCombiner
+*/
+
 interface accessBlockchain {
     Hashtable <Integer, String> accessData = new Hashtable <Integer, String>();
     String accessHashValue = ""; 
@@ -54,7 +62,7 @@ class characterStreams implements accessCharacterStreams {
 		try { 
 			sourceStream = new FileReader("TransactionHistory.txt"); 
 			int temp;
-			System.out.println("Data found in .txt file is:");
+			//System.out.println("Data found in .txt file is:");
 			String checkFrequencyOfString = "";
 			while ((temp = sourceStream.read()) != -1) {
 				checkFrequencyOfString+=(char)temp;			    
@@ -95,7 +103,9 @@ class SelfLoopedTransaction extends Exception {
     }
 }
 
-
+class LogIn {
+    
+}
 
 class Block implements accessBlockchain { 
     private String hashValue; 
@@ -197,14 +207,14 @@ class Blockchain {
                 }
             }
             catch(Exception e) {
-                System.out.println("Internel Error!");
+                //System.out.println("Internel Error!");
             }
         }
         try {
             obj.readCharacterStreams();
         }
         catch(Exception e) {
-            System.out.println("Error reading .txt file!");
+            //System.out.println("Error reading .txt file!");
         }
     }
 
@@ -448,6 +458,10 @@ class Blockchain {
                         //System.out.print("Public-Key successfully verified...\n");
                         Dashboard.Console1.append("Public-Key successfully verified...\n");
                         accessIntegrations.Transaction();
+                    }
+                    else {
+                        //System.out.print("Public-Key is wrongly entered.\n");
+                        Dashboard.Console1.append("Public-Key is wrongly entered.\n");
                     }
                 }
             });
@@ -760,6 +774,188 @@ class Blockchain {
     }
 } 
 
+public class Main extends javax.swing.JFrame {
+
+    private static Hashtable <String, String> UserCredentials = new Hashtable <String, String>(); 
+
+    private javax.swing.JButton LogIn;
+    private javax.swing.JButton SignUp;
+    private static javax.swing.JTextField Username;
+    private static javax.swing.JTextField Username1;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JPanel jPanel1;
+    
+    private static void SignUp() {
+        String UserName = Username.getText();
+        String Password = Username1.getText();
+        UserCredentials.put(Password, UserName);
+    }
+    public static Boolean LogIn() {
+        UserCredentials.put("1234", "1234");
+        Scanner scanner = new Scanner(System.in);
+        String UserName = Username.getText();
+        String Password = Username1.getText();
+            if(UserCredentials.contains(UserName)) {
+                if(UserCredentials.containsKey(Password)) {
+                    System.out.println("Access Granted.");
+                    return true;
+                }
+                else {
+                    System.out.println("Try Again");
+                }
+            }
+            else {
+                SignUp();
+                return false;
+            }
+        scanner.close();
+        return false;
+    }
+    public Main() {
+        initComponents();
+    }
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        LogIn = new javax.swing.JButton();
+        SignUp = new javax.swing.JButton();
+        Username = new javax.swing.JTextField();
+        jLabel1 = new javax.swing.JLabel();
+        Username1 = new javax.swing.JTextField();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setResizable(false);
+
+        jPanel1.setBackground(new java.awt.Color(0, 0, 0));
+
+        LogIn.setBackground(new java.awt.Color(21, 185, 0));
+        LogIn.setFont(new java.awt.Font("Microsoft YaHei", 1, 18));
+        LogIn.setForeground(new java.awt.Color(255, 255, 255));
+        LogIn.setText("Log In");
+        LogIn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(21, 185, 0), 3));
+        LogIn.setContentAreaFilled(false);
+        LogIn.setFocusPainted(false);
+        LogIn.setOpaque(true);
+        LogIn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                LogInActionPerformed(evt);
+            }
+        });
+
+        SignUp.setFont(new java.awt.Font("Microsoft YaHei", 1, 18));
+        SignUp.setForeground(new java.awt.Color(255, 255, 255));
+        SignUp.setText("Sign Up");
+        SignUp.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(21, 185, 0), 3));
+        SignUp.setContentAreaFilled(false);
+        SignUp.setFocusPainted(false);
+        SignUp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                SignUpActionPerformed(evt);
+            }
+        });
+
+        Username.setBackground(new java.awt.Color(0, 0, 0));
+        Username.setFont(new java.awt.Font("Segoe UI", 1, 13));
+        Username.setForeground(new java.awt.Color(255, 255, 255));
+        Username.setText("Username");
+        Username.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(21, 185, 0), 3));
+
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource(".//LogInPageBackground.png")));
+
+        Username1.setBackground(new java.awt.Color(0, 0, 0));
+        Username1.setFont(new java.awt.Font("Segoe UI", 1, 13));
+        Username1.setForeground(new java.awt.Color(21, 185, 0));
+        Username1.setText("Password");
+        Username1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255), 3));
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addComponent(jLabel1)
+                .addGap(0, 69, Short.MAX_VALUE))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(471, 471, 471)
+                        .addComponent(SignUp, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(79, 79, 79)
+                        .addComponent(LogIn, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(526, 526, 526)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(Username, javax.swing.GroupLayout.DEFAULT_SIZE, 269, Short.MAX_VALUE)
+                            .addComponent(Username1))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 452, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(Username, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(Username1, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 38, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(LogIn, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(SignUp, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(74, 74, 74))
+        );
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+
+        pack();
+    }
+
+    private void SignUpActionPerformed(java.awt.event.ActionEvent evt) {
+       SignUp();
+       Username.setText("");
+       Username1.setText("");
+    }
+
+    private void LogInActionPerformed(java.awt.event.ActionEvent evt) {
+        if(LogIn()==true) {
+            new Dashboard().setVisible(true);
+        }
+    }
+    public static void main(String args[]) {
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new Main().setVisible(true);
+            }
+        });
+    }
+}
+
+
 class ConfirmationKey extends javax.swing.JFrame {
 
     private static final long serialVersionUID = 1L;
@@ -803,6 +999,7 @@ class ConfirmationKey extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         Background2.setBackground(new java.awt.Color(4, 12, 0));
+        setResizable(false);
 
         PublicKey.setBackground(new java.awt.Color(0, 0, 0));
         PublicKey.setFont(new java.awt.Font("Segoe UI", 1, 14));
@@ -863,7 +1060,7 @@ class ConfirmationKey extends javax.swing.JFrame {
 
         PrivateKeyWrite.setFont(new java.awt.Font("Segoe UI", 0, 13));
         PrivateKeyWrite.setForeground(new java.awt.Color(100, 100, 100));
-        PrivateKeyWrite.setText("PrivateKey");
+        //PrivateKeyWrite.setText("PrivateKey");
         
 
         jLabel1.setIcon(new javax.swing.ImageIcon("F:\\Group3.png"));
@@ -986,7 +1183,7 @@ class ConfirmationKey extends javax.swing.JFrame {
 }
 
 
-public class Dashboard extends javax.swing.JFrame {
+class Dashboard extends javax.swing.JFrame {
 
     private static final long serialVersionUID = 1L;
     //private static LinkedList<Block> blockchain = new LinkedList<Block>();
@@ -996,6 +1193,33 @@ public class Dashboard extends javax.swing.JFrame {
     private static Blockchain.IntegrationsHouse IntegrationGradle = new Blockchain.IntegrationsHouse();
     private static Blockchain.BlockchainMining MiningGradle = newBlockchainProduction.new BlockchainMining();
     protected static int counter = 0;
+
+    private static Hashtable <String, String> UserCredentials = new Hashtable <String, String>(); 
+    
+    private static void SignUp(String Password, String UserName) {
+        UserCredentials.put(Password, UserName);
+    }
+    private static void GetInference(String[] args) {
+        UserCredentials.put("0", "0");
+        Scanner scanner = new Scanner(System.in);
+        while(true) {
+        String UserName = scanner.next();
+        String Password = scanner.next();
+            if(UserCredentials.contains(UserName)) {
+                if(UserCredentials.containsKey(Password)) {
+                    System.out.println("Access Granted.");
+                    break;
+                }
+                else {
+                    System.out.println("Try Again");
+                }
+            }
+            else {
+                SignUp(Password, UserName);
+            }
+        }
+        scanner.close();
+    }
 
     private javax.swing.JLabel AMOUNT;
     private javax.swing.JTextField Amount;

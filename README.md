@@ -6,9 +6,12 @@ Interacting with Blockchain on Java-based Intractive, User-Friendly UI Dashboard
 - Blockchain
   - Blockhain Mining
     - Mine()
+    - Consensus()
   - Production Gradle
+    - GenesisChamber()
     - Encryption Mechanism ()
   - Integrations House
     - Merkle Trees
+      - MerkleTreeConstruction()
     - Transactions()
     - Decentralised Blockchain Validation()

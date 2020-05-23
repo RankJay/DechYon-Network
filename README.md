@@ -5,6 +5,7 @@
 Interacting with Blockchain on Java-based Intractive, User-Friendly UI Dashboard to collaborate and get the instant updates about the current state of your Crypto-Wallet and current trends of Blockchain with Public-Key for accessing any feature of MainFrame and Private-Key for validating, authenticating and confirming processes accessed.
 - Blockchain
   - Blockhain Mining
+    - accessMining()
     - Mine()
     - Consensus()
   - Production Gradle

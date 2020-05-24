@@ -19,3 +19,4 @@ Interacting with Blockchain on Java-based Intractive, User-Friendly UI Dashboard
       - MerkleTreeConstruction()
     - Transactions()
     - Decentralised Blockchain Validation()
+- Main

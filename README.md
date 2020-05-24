@@ -11,8 +11,10 @@ Interacting with Blockchain on Java-based Intractive, User-Friendly UI Dashboard
   - Production Gradle
     - accessGenesisChamber()
     - GenesisChamber()
-    - Encryption Mechanism ()
+    - EncryptionMechanism ()
   - Integrations House
+    - accessTransaction()
+    - aceesMerkleTrees()
     - Merkle Trees
       - MerkleTreeConstruction()
     - Transactions()

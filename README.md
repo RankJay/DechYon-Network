@@ -22,3 +22,4 @@ Interacting with Blockchain on Java-based Intractive, User-Friendly UI Dashboard
 - Main
   - FrontEnd
     - Dashboard
+    - ConfirmationKey

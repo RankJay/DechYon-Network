@@ -20,7 +20,7 @@ Interacting with Blockchain on Java-based Intractive, User-Friendly UI Dashboard
     - Transactions()
     - Decentralised Blockchain Validation()
 - Main
-  - FrontEnd
-    - Main
-    - Dashboard
-    - ConfirmationKey
+  - FrontEnd - This three Classes handles the front-end (UI) of the entire project.
+    - Main - LogIn\SignUp UI
+    - Dashboard - Main Dashboard UI
+    - ConfirmationKey - Confirming Validation UI

@@ -12,7 +12,7 @@ Interacting with Blockchain on Java-based Intractive, User-Friendly UI Dashboard
     - accessGenesisChamber()
     - GenesisChamber()
     - EncryptionMechanism ()
-  - Integrations House
+  - Integrations House - This class contains all the features and capabilities that can be carried out using Blockchain
     - accessTransaction()
     - aceesMerkleTrees()
     - Merkle Trees

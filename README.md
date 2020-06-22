@@ -15,7 +15,7 @@ Interacting with Blockchain on Java-based Intractive, User-Friendly UI Dashboard
   - Integrations House - This class contains all the features and capabilities that can be carried out using Blockchain
     - accessTransaction()
     - aceesMerkleTrees()
-    - Merkle Trees
+    - Merkle Trees - This class is responsible for constructing and fetching the latest merkle-root, which here has been parsed as a Public-Key for accessing the MainFrame.
       - MerkleTreeConstruction()
     - Transactions()
     - Decentralised Blockchain Validation()

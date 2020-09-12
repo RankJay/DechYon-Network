@@ -2,7 +2,8 @@
 
 # Blockchain based Secured-Transaction on Java
 
-Interacting with Blockchain on Java-based Intractive, User-Friendly UI Dashboard to collaborate and get the instant updates about the current state of your Crypto-Wallet and current trends of Blockchain with Public-Key for accessing any feature of MainFrame and Private-Key for validating, authenticating and confirming processes accessed.
+Interacting with Blockchain on Java-based Intractive, User-Friendly UI Dashboard to collaborate and get the instant updates about the current state of your Crypto-Wallet and current trends of Blockchain with Public-Key for accessing any feature of MainFrame and Private-Key for validating, authenticating and confirming processes accessed. This project
+ia a part of my cirriculum projects on Java.
 - Blockchain
   - Blockhain Mining - This class focuses on mining a new block and based on miner's address and validation through blockchain, provides bounty to miner as a Proof of Work.
     - accessBlockchainMining()
